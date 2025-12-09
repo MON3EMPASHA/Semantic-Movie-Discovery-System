@@ -49,3 +49,4 @@ movieSchema.index({ title: "text", plot: "text", script: "text" });
 movieSchema.index({ genres: 1, releaseYear: -1 });
 
 export const MovieModel = model<MovieDocument>("Movie", movieSchema);
+

@@ -53,3 +53,4 @@ export const MovieCard = ({ movie, onSelect, isActive }: Props) => (
     </div>
   </button>
 );
+
