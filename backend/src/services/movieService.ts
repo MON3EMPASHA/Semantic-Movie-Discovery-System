@@ -1,7 +1,34 @@
+import axios from 'axios';
 import { Types } from 'mongoose';
 import { MovieModel, type MovieDocument } from '../models/Movie';
 import { semanticSearch } from './vectorSearchService';
 import { logger } from '../utils/logger';
+import { uploadImageToGridFS, deleteImageFromGridFS } from './gridfsService';
+
+// Lightweight view model returned to clients
+interface MovieSummary {
+  id: string;
+  title: string;
+  genres: string[];
+  cast: string[];
+  rating?: number;
+  posterUrl?: string;
+  posterGridFSId?: string;
+  releaseYear?: number;
+}
+
+const toMovieSummary = (movie: MovieDocument | any): MovieSummary => ({
+  id: movie.id || movie._id?.toString(),
+  title: movie.title,
+  genres: movie.genres ?? [],
+  cast: movie.cast ?? [],
+  rating: movie.rating,
+  posterUrl: movie.posterUrl,
+  posterGridFSId: movie.posterGridFSId ? movie.posterGridFSId.toString() : undefined,
+  releaseYear: movie.releaseYear,
+});
+
+const normalizeTitle = (title: string) => title.trim().replace(/\s+/g, ' ').toLowerCase();
 
 export interface CreateMovieDTO {
   title: string;
@@ -22,6 +49,34 @@ export const createMovie = async (payload: CreateMovieDTO): Promise<MovieDocumen
     genres: payload.genres ?? [],
     cast: payload.cast ?? [],
   });
+};
+
+export const createMovieWithImage = async (
+  payload: CreateMovieDTO,
+  imageBuffer?: Buffer,
+  imageContentType?: string,
+  imageFilename?: string
+): Promise<MovieDocument> => {
+  const movieData: any = {
+    ...payload,
+    genres: payload.genres ?? [],
+    cast: payload.cast ?? [],
+  };
+
+  // Upload image to GridFS if provided
+  if (imageBuffer && imageContentType && imageFilename) {
+    try {
+      const fileId = await uploadImageToGridFS(imageBuffer, imageFilename, imageContentType);
+      movieData.posterGridFSId = fileId;
+      movieData.posterContentType = imageContentType;
+      logger.info(`Uploaded poster image to GridFS: ${fileId}`);
+    } catch (error) {
+      logger.error('Failed to upload image to GridFS', error);
+      // Continue without image rather than failing completely
+    }
+  }
+
+  return MovieModel.create(movieData);
 };
 
 export const updateMovieEmbeddingKeys = async (
@@ -167,7 +222,237 @@ export const deleteMovie = async (id: string): Promise<boolean> => {
   if (!Types.ObjectId.isValid(id)) {
     return false;
   }
+  
+  // Get movie to check for GridFS image
+  const movie = await MovieModel.findById(id);
+  if (movie?.posterGridFSId) {
+    try {
+      await deleteImageFromGridFS(movie.posterGridFSId);
+      logger.info(`Deleted GridFS image: ${movie.posterGridFSId}`);
+    } catch (error) {
+      logger.error('Failed to delete GridFS image', error);
+      // Continue with movie deletion even if image deletion fails
+    }
+  }
+  
   const result = await MovieModel.findByIdAndDelete(id);
   return result !== null;
+};
+
+export const updateMoviePosterImage = async (
+  id: string,
+  imageBuffer: Buffer,
+  imageContentType: string,
+  imageFilename: string
+): Promise<MovieDocument | null> => {
+  if (!Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  const movie = await MovieModel.findById(id);
+  if (!movie) {
+    return null;
+  }
+
+  // Delete old image if exists
+  if (movie.posterGridFSId) {
+    try {
+      await deleteImageFromGridFS(movie.posterGridFSId);
+    } catch (error) {
+      logger.error('Failed to delete old GridFS image', error);
+    }
+  }
+
+  // Upload new image
+  const fileId = await uploadImageToGridFS(imageBuffer, imageFilename, imageContentType);
+  
+  return MovieModel.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        posterGridFSId: fileId,
+        posterContentType: imageContentType,
+      },
+    },
+    { new: true }
+  );
+};
+
+/**
+ * Get random movies
+ */
+export const getRandomMovies = async (limit: number = 10): Promise<MovieSummary[]> => {
+  const docs = await MovieModel.aggregate([{ $sample: { size: limit } }]);
+  return docs.map((doc) => toMovieSummary(doc));
+};
+
+/**
+ * Get best rated movies by time period
+ */
+export const getBestRatedMovies = async (
+  period: string = 'all',
+  limit: number = 20
+): Promise<MovieSummary[]> => {
+  const now = new Date();
+  let dateFilter: Date | undefined;
+
+  switch (period) {
+    case 'today':
+      dateFilter = new Date(now.setHours(0, 0, 0, 0));
+      break;
+    case 'week':
+      dateFilter = new Date(now.setDate(now.getDate() - 7));
+      break;
+    case 'month':
+      dateFilter = new Date(now.setMonth(now.getMonth() - 1));
+      break;
+    case 'year':
+      dateFilter = new Date(now.setFullYear(now.getFullYear() - 1));
+      break;
+    default:
+      dateFilter = undefined; // all time
+  }
+
+  const query: any = { rating: { $exists: true, $ne: null } };
+  if (dateFilter) {
+    query.createdAt = { $gte: dateFilter };
+  }
+
+  const docs = await MovieModel.find(query)
+    .sort({ rating: -1, releaseYear: -1 })
+    .limit(limit)
+    .lean();
+
+  return docs.map((doc) => toMovieSummary(doc));
+};
+
+/**
+ * Backfill posters for movies that are missing GridFS images but have posterUrl
+ */
+export const backfillMissingPosters = async (): Promise<{ total: number; updated: number; failed: number }> => {
+  const candidates = await MovieModel.find({ posterGridFSId: { $exists: false }, posterUrl: { $exists: true, $ne: '' } });
+  let updated = 0;
+  let failed = 0;
+
+  for (const movie of candidates) {
+    if (!movie.posterUrl) continue;
+    try {
+      // Try multiple URLs: provided + original size fallback
+      const urlCandidates = [
+        movie.posterUrl,
+        movie.posterUrl?.replace('/w500/', '/original/'),
+        movie.posterUrl?.replace('/w500', '/original'),
+      ].filter(Boolean) as string[];
+
+      let buffer: Buffer | null = null;
+      let contentType = 'image/jpeg';
+
+      for (const url of urlCandidates) {
+        try {
+          const response = await axios.get(url, {
+            responseType: 'arraybuffer',
+            timeout: 20000,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (MovieImporter)',
+              Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+            },
+          });
+          buffer = Buffer.from(response.data);
+          contentType = response.headers['content-type'] || 'image/jpeg';
+          break;
+        } catch (err) {
+          // Try next candidate
+          continue;
+        }
+      }
+
+      if (!buffer) {
+        throw new Error('All poster URL attempts failed');
+      }
+
+      const filename = `${movie.title.replace(/[^a-zA-Z0-9]/g, '_')}_poster`;
+      const fileId = await uploadImageToGridFS(buffer, `${filename}.img`, contentType);
+      movie.posterGridFSId = fileId;
+      movie.posterContentType = contentType;
+      await movie.save();
+      updated++;
+    } catch (error) {
+      logger.warn(`Backfill poster failed for ${movie.title}`, error as Error);
+      failed++;
+    }
+  }
+
+  return { total: candidates.length, updated, failed };
+};
+
+/**
+ * List movies missing posterGridFSId to help manual fixes
+ */
+export const listMissingPosters = async (limit = 500): Promise<MovieSummary[]> => {
+  const safeLimit = Math.max(1, Math.min(limit, 1000));
+  const docs = await MovieModel.find({ posterGridFSId: { $exists: false } })
+    .sort({ createdAt: -1 })
+    .limit(safeLimit)
+    .lean();
+  return docs.map((doc) => toMovieSummary(doc));
+};
+
+/**
+ * Deduplicate movies by normalized title + releaseYear
+ * Keeps the record with highest rating, preferring one with poster
+ */
+export const dedupeMovies = async (): Promise<{ totalGroups: number; removed: number; kept: number }> => {
+  const movies = await MovieModel.find().lean();
+  const groups = new Map<string, any[]>();
+
+  for (const movie of movies) {
+    const key = `${normalizeTitle(movie.title)}::${movie.releaseYear || ''}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(movie);
+  }
+
+  let removed = 0;
+  let kept = 0;
+
+  for (const [, group] of groups) {
+    if (group.length <= 1) {
+      kept += group.length;
+      continue;
+    }
+
+    // Choose survivor: highest rating, then has posterGridFSId, then newest createdAt
+    const survivor = [...group].sort((a, b) => {
+      const ratingA = a.rating ?? 0;
+      const ratingB = b.rating ?? 0;
+      if (ratingA !== ratingB) return ratingB - ratingA;
+      const hasPosterA = a.posterGridFSId ? 1 : 0;
+      const hasPosterB = b.posterGridFSId ? 1 : 0;
+      if (hasPosterA !== hasPosterB) return hasPosterB - hasPosterA;
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    })[0];
+
+    const survivorId = survivor._id;
+
+    for (const dup of group) {
+      if (String(dup._id) === String(survivorId)) continue;
+
+      // If survivor lacks poster but duplicate has one, move poster reference
+      if (!survivor.posterGridFSId && dup.posterGridFSId) {
+        await MovieModel.findByIdAndUpdate(survivorId, {
+          posterGridFSId: dup.posterGridFSId,
+          posterContentType: dup.posterContentType,
+        });
+      }
+
+      await MovieModel.findByIdAndDelete(dup._id);
+      removed++;
+    }
+
+    kept++;
+  }
+
+  return { totalGroups: groups.size, removed, kept };
 };
 

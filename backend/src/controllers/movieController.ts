@@ -1,11 +1,12 @@
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { ingestMovie } from '../services/ingestionService';
-import { getMovieById, searchMoviesByEmbedding, getAllMovies, updateMovie, deleteMovie } from '../services/movieService';
+import { ingestMovie, ingestMovieWithImage } from '../services/ingestionService';
+import { getMovieById, searchMoviesByEmbedding, getAllMovies, updateMovie, deleteMovie, updateMoviePosterImage } from '../services/movieService';
 import type { MovieDocument } from '../models/Movie';
 import { asyncHandler } from '../utils/asyncHandler';
 import { generateEmbedding } from '../services/embeddingService';
 import { logger } from '../utils/logger';
+import { downloadImageFromGridFS } from '../services/gridfsService';
 
 // Helper to transform empty strings to undefined and validate URL if provided
 const urlOrEmpty = z.preprocess(
@@ -33,22 +34,6 @@ const searchSchema = z.object({
 
 const similarSchema = z.object({
   limit: z.coerce.number().min(1).max(10).default(5),
-});
-
-export const ingestMovieHandler = asyncHandler(async (req, res) => {
-  try {
-    const payload = ingestionSchema.parse(req.body);
-    await ingestMovie(payload);
-    res.status(202).json({ message: 'Movie ingestion started' });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('Ingestion handler error', {
-      error: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
-      payload: req.body,
-    });
-    throw error;
-  }
 });
 
 export const searchMoviesHandler = asyncHandler(async (req, res) => {
@@ -88,6 +73,7 @@ export const searchMoviesHandler = asyncHandler(async (req, res) => {
       cast: movie.cast,
       rating: movie.rating,
       posterUrl: movie.posterUrl,
+      posterGridFSId: movie.posterGridFSId?.toString(),
       releaseYear: movie.releaseYear,
       score,
     }));
@@ -147,6 +133,7 @@ export const getSimilarMoviesHandler = asyncHandler(async (req: Request, res) =>
       id: candidate.id,
       title: candidate.title,
       posterUrl: candidate.posterUrl,
+      posterGridFSId: candidate.posterGridFSId?.toString(),
       score,
     })),
   });
@@ -214,5 +201,179 @@ export const deleteMovieHandler = asyncHandler(async (req, res) => {
   }
 
   res.json({ message: 'Movie deleted successfully' });
+});
+
+// Handler for ingesting movie - supports both JSON and FormData with optional image
+export const ingestMovieWithImageHandler = asyncHandler(async (req, res) => {
+  try {
+    // DEBUG: Log what we received
+    logger.info('=== INGESTION REQUEST DEBUG ===');
+    logger.info('Content-Type:', req.headers['content-type']);
+    logger.info('Has file:', !!req.file);
+    logger.info('req.body type:', typeof req.body);
+    logger.info('req.body:', req.body);
+    logger.info('req.body keys:', Object.keys(req.body || {}));
+    logger.info('================================');
+
+    let payload: any;
+
+    // If multer processed the request (FormData), req.body will have fields
+    // If it's a JSON request, express.json() would have parsed req.body
+    const isFormData = req.headers['content-type']?.includes('multipart/form-data');
+    const hasBodyFields = Object.keys(req.body || {}).length > 0;
+
+    if (isFormData && hasBodyFields) {
+      // FormData request - multer parsed fields into req.body
+      const bodyData = req.body;
+
+      // Helper function to normalize values to arrays
+      const normalizeArray = (value: any): string[] => {
+        if (!value) return [];
+        // If it's a JSON string, parse it
+        if (typeof value === 'string') {
+          try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) {
+              return parsed.filter((v) => v && typeof v === 'string' && v.trim());
+            }
+          } catch {
+            // Not JSON, treat as single string
+            return value.trim() ? [value] : [];
+          }
+        }
+        // If it's already an array, filter it
+        if (Array.isArray(value)) {
+          return value.filter((v) => v && typeof v === 'string' && v.trim());
+        }
+        return [];
+      };
+
+      // Build payload from FormData
+      payload = {
+        title: bodyData.title,
+        genres: normalizeArray(bodyData.genres),
+        cast: normalizeArray(bodyData.cast),
+        director:
+          bodyData.director && bodyData.director.trim()
+            ? bodyData.director
+            : undefined,
+        releaseYear:
+          bodyData.releaseYear && bodyData.releaseYear.trim()
+            ? Number(bodyData.releaseYear)
+            : undefined,
+        plot:
+          bodyData.plot && bodyData.plot.trim() ? bodyData.plot : undefined,
+        trailerUrl:
+          bodyData.trailerUrl && bodyData.trailerUrl.trim()
+            ? bodyData.trailerUrl
+            : undefined,
+        posterUrl:
+          bodyData.posterUrl && bodyData.posterUrl.trim()
+            ? bodyData.posterUrl
+            : undefined,
+        rating:
+          bodyData.rating && bodyData.rating.trim()
+            ? Number(bodyData.rating)
+            : undefined,
+      };
+
+      // Remove undefined values
+      Object.keys(payload).forEach((key) => {
+        if (payload[key] === undefined) delete payload[key];
+      });
+    } else if (hasBodyFields) {
+      // JSON request - body already parsed by express.json()
+      payload = req.body;
+    } else {
+      // No body data at all
+      logger.error('No body data received');
+      throw new Error('No request body provided');
+    }
+
+    // Validate with schema
+    const validatedPayload = ingestionSchema.parse(payload);
+    
+    // Get file (multer.single() puts it in req.file)
+    const file = req.file;
+
+    if (file) {
+      // Ensure buffer is a proper Buffer object
+      const imageBuffer = Buffer.isBuffer(file.buffer) ? file.buffer : Buffer.from(file.buffer);
+      logger.info('Image buffer info:', {
+        isBuffer: Buffer.isBuffer(imageBuffer),
+        size: imageBuffer.length,
+        type: typeof imageBuffer
+      });
+      
+      await ingestMovieWithImage(
+        validatedPayload,
+        imageBuffer,
+        file.mimetype,
+        file.originalname
+      );
+      res.status(202).json({ message: 'Movie ingestion with image started' });
+    } else {
+      await ingestMovie(validatedPayload);
+      res.status(202).json({ message: 'Movie ingestion started' });
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Ingestion handler error', {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      payload: req.body,
+    });
+    throw error;
+  }
+});
+
+// Handler for getting movie poster image
+export const getMoviePosterHandler = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params as { id: string };
+  const movie = await getMovieById(id);
+
+  if (!movie) {
+    return res.status(404).json({ message: 'Movie not found' });
+  }
+
+  if (!movie.posterGridFSId) {
+    return res.status(404).json({ message: 'Movie has no poster image stored in GridFS' });
+  }
+
+  try {
+    const { buffer, contentType } = await downloadImageFromGridFS(movie.posterGridFSId);
+    res.set('Content-Type', contentType);
+    res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.send(buffer);
+  } catch (error) {
+    logger.error('Failed to retrieve poster image', error);
+    return res.status(500).json({ message: 'Failed to retrieve poster image' });
+  }
+});
+
+// Handler for updating movie poster image
+export const updateMoviePosterHandler = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params as { id: string };
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ message: 'No image file provided' });
+  }
+
+  try {
+    const movie = await updateMoviePosterImage(id, file.buffer, file.mimetype, file.originalname);
+    
+    if (!movie) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+
+    res.json({ 
+      message: 'Poster image updated successfully',
+      posterGridFSId: movie.posterGridFSId,
+    });
+  } catch (error) {
+    logger.error('Failed to update poster image', error);
+    throw error;
+  }
 });
 

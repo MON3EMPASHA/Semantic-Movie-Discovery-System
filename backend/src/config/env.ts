@@ -8,6 +8,8 @@ const envSchema = z.object({
   NODE_ENV: z.string().default("development"),
   PORT: z.string().default("4000"),
   MONGODB_URI: z.string().url(),
+  // TMDB API for movie seeding (optional)
+  TMDB_API_KEY: z.string().optional(),
   // Embedding options - using local transformers.js
   EMBEDDING_MODEL: z
     .string()

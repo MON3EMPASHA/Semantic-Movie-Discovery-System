@@ -5,6 +5,7 @@ export interface MovieSummary {
   cast: string[];
   rating?: number;
   posterUrl?: string;
+  posterGridFSId?: string;
   releaseYear?: number;
   score?: number;
 }
@@ -20,6 +21,7 @@ export interface Movie {
   plot?: string;
   trailerUrl?: string;
   posterUrl?: string;
+  posterGridFSId?: string;
   rating?: number;
   metadata?: Record<string, unknown>;
   createdAt?: string;
@@ -30,6 +32,7 @@ export interface SimilarMovie {
   id: string;
   title: string;
   posterUrl?: string;
+  posterGridFSId?: string;
   score?: number;
 }
 

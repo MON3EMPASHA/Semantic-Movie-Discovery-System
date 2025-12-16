@@ -59,12 +59,20 @@ export default function Home() {
             <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">
               CineGraph AI
             </p>
-            <a
-              href="/admin"
-              className="rounded-lg border border-white/10 px-4 py-2 text-sm transition hover:bg-white/5"
-            >
-              Admin Panel
-            </a>
+            <div className="flex gap-2">
+              <a
+                href="/dashboard"
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm transition hover:bg-white/5"
+              >
+                📊 Dashboard
+              </a>
+              <a
+                href="/admin"
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm transition hover:bg-white/5"
+              >
+                Admin Panel
+              </a>
+            </div>
           </div>
           <h1 className="text-3xl font-semibold md:text-4xl">
             Semantic movie discovery powered by MongoDB + Vector Search
@@ -93,13 +101,37 @@ export default function Home() {
           />
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {error && <p className="text-sm text-rose-300">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Searching…" : "Find movies"}
-            </button>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Searching…" : "Find movies"}
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={async () => {
+                  setLoading(true);
+                  setError(null);
+                  try {
+                    const { getRandomMovies } = await import('../lib/extendedApi');
+                    const response = await getRandomMovies(10);
+                    setMovies(response.results);
+                    setSelectedMovie(null);
+                    setSimilar([]);
+                  } catch (err) {
+                    setError('Failed to load random movies');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                🎲 Random Movies
+              </button>
+            </div>
           </div>
         </form>
 

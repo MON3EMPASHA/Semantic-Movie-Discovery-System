@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { IngestionJobModel } from '../models/IngestionJob';
 import {
   createMovie,
+  createMovieWithImage,
   type CreateMovieDTO,
   updateMovieEmbeddingKeys,
   getMovieById,
@@ -67,10 +68,74 @@ export const generateMovieEmbeddings = async (
 };
 
 /**
- * Ingest a new movie with embeddings
+ * Ingest a new movie WITHOUT image (JSON only)
  */
 export const ingestMovie = async (payload: CreateMovieDTO): Promise<void> => {
   const movie = await createMovie(payload);
+  const job = await IngestionJobModel.create({
+    movieId: movie._id,
+    status: 'processing',
+  });
+
+  try {
+    const embeddings = await generateMovieEmbeddings(payload);
+
+    if (Object.keys(embeddings).length > 0) {
+      try {
+        const embeddingKeys = await upsertMovieEmbeddings(
+          String(movie._id),
+          embeddings
+        );
+        await updateMovieEmbeddingKeys(
+          movie._id as Types.ObjectId,
+          embeddingKeys
+        );
+        logger.info(
+          `Upserted ${Object.keys(embeddings).length} embeddings for movie ${movie._id}`
+        );
+      } catch (error) {
+        logger.error(
+          `Failed to upsert embeddings to vector DB: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`
+        );
+      }
+    } else {
+      logger.warn(
+        `Movie ${movie._id} ingested without embeddings (no text content provided)`
+      );
+    }
+
+    job.status = 'completed';
+    await job.save();
+    logger.info(`Movie ${movie._id} ingested successfully`);
+  } catch (error) {
+    job.status = 'failed';
+    job.errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    await job.save();
+    logger.error('Failed to ingest movie', {
+      movieId: movie._id,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
+  }
+};
+
+/**
+ * Ingest a new movie with embeddings and optional poster image
+ */
+export const ingestMovieWithImage = async (
+  payload: CreateMovieDTO,
+  imageBuffer?: Buffer,
+  imageContentType?: string,
+  imageFilename?: string
+): Promise<void> => {
+  const movie = await createMovieWithImage(
+    payload,
+    imageBuffer,
+    imageContentType,
+    imageFilename
+  );
   const job = await IngestionJobModel.create({
     movieId: movie._id,
     status: 'processing',
@@ -109,13 +174,13 @@ export const ingestMovie = async (payload: CreateMovieDTO): Promise<void> => {
 
     job.status = 'completed';
     await job.save();
-    logger.info(`Movie ${movie._id} ingested successfully`);
+    logger.info(`Movie ${movie._id} ingested successfully with image`);
   } catch (error) {
     job.status = 'failed';
     job.errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
     await job.save();
-    logger.error('Failed to ingest movie', {
+    logger.error('Failed to ingest movie with image', {
       movieId: movie._id,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,

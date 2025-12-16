@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface MovieDocument extends Document {
   title: string;
@@ -9,6 +9,8 @@ export interface MovieDocument extends Document {
   plot?: string;
   trailerUrl?: string;
   posterUrl?: string;
+  posterGridFSId?: Types.ObjectId;
+  posterContentType?: string;
   rating?: number;
   metadata?: Record<string, unknown>;
   embeddingKeys: {
@@ -30,6 +32,8 @@ const movieSchema = new Schema<MovieDocument>(
     plot: { type: String },
     trailerUrl: { type: String },
     posterUrl: { type: String },
+    posterGridFSId: { type: Schema.Types.ObjectId },
+    posterContentType: { type: String },
     rating: { type: Number },
     metadata: { type: Schema.Types.Mixed },
     embeddingKeys: {
@@ -40,6 +44,13 @@ const movieSchema = new Schema<MovieDocument>(
   },
   {
     timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret) => {
+        ret.id = ret._id.toString();
+        return ret;
+      },
+    },
   }
 );
 

@@ -75,18 +75,72 @@ export const getMovie = async (id: string): Promise<Movie> => {
   return handleResponse<Movie>(response);
 };
 
-export const createMovie = async (data: CreateMovieDTO): Promise<{ message: string }> => {
-  const response = await fetch(`${API_BASE_URL}/movies/ingest`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  return handleResponse<{ message: string }>(response);
+export const createMovie = async (
+  data: CreateMovieDTO,
+  posterFile?: File
+): Promise<{ message: string }> => {
+  console.log('=== CREATE MOVIE DEBUG ===');
+  console.log('Has posterFile:', !!posterFile);
+  console.log('Data:', data);
+  
+  // Always try FormData route first if file exists, otherwise use JSON
+  if (posterFile) {
+    console.log('Using FormData upload');
+    // Use FormData for file upload
+    const formData = new FormData();
+    formData.append('title', data.title);
+    formData.append('plot', data.plot || '');
+    formData.append('trailerUrl', data.trailerUrl || '');
+    formData.append('posterUrl', data.posterUrl || '');
+    formData.append('director', data.director || '');
+    
+    // Convert numbers to strings properly (not empty strings)
+    if (data.rating !== undefined && data.rating !== null) {
+      formData.append('rating', String(data.rating));
+    }
+    if (data.releaseYear !== undefined && data.releaseYear !== null) {
+      formData.append('releaseYear', String(data.releaseYear));
+    }
+    
+    // Serialize arrays as JSON strings
+    formData.append('genres', JSON.stringify(data.genres || []));
+    formData.append('cast', JSON.stringify(data.cast || []));
+    
+    // Add image file
+    formData.append('posterImage', posterFile);
+
+    console.log('FormData entries:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`  ${key}:`, value);
+    }
+
+    console.log('Sending request to:', `${API_BASE_URL}/movies/ingest`);
+    const response = await fetch(`${API_BASE_URL}/movies/ingest`, {
+      method: 'POST',
+      body: formData, // Don't set Content-Type, browser will set it with boundary
+    });
+    console.log('Response status:', response.status);
+    return handleResponse<{ message: string }>(response);
+  } else {
+    console.log('Using JSON upload');
+    // Use JSON for text-only
+    const response = await fetch(`${API_BASE_URL}/movies/ingest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<{ message: string }>(response);
+  }
 };
 
-export const updateMovie = async (id: string, data: Partial<CreateMovieDTO>): Promise<Movie> => {
+export const updateMovie = async (
+  id: string,
+  data: Partial<CreateMovieDTO>,
+  posterFile?: File
+): Promise<Movie> => {
+  // First, update movie metadata (title, plot, etc.)
   const response = await fetch(`${API_BASE_URL}/movies/${id}`, {
     method: 'PUT',
     headers: {
@@ -94,7 +148,21 @@ export const updateMovie = async (id: string, data: Partial<CreateMovieDTO>): Pr
     },
     body: JSON.stringify(data),
   });
-  return handleResponse<Movie>(response);
+  const updatedMovie = await handleResponse<Movie>(response);
+
+  // If poster file is provided, also update the poster
+  if (posterFile) {
+    const formData = new FormData();
+    formData.append('posterImage', posterFile);
+    const posterResponse = await fetch(`${API_BASE_URL}/movies/${id}/poster`, {
+      method: 'PUT',
+      body: formData,
+    });
+    // Return the poster-updated version
+    return handleResponse<Movie>(posterResponse);
+  }
+
+  return updatedMovie;
 };
 
 export const deleteMovie = async (id: string): Promise<{ message: string }> => {

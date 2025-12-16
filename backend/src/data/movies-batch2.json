@@ -1,0 +1,202 @@
+[
+  {
+    "title": "The Silence of the Lambs",
+    "plot": "A young FBI cadet must receive the help of an incarcerated and manipulative cannibal killer to help catch another serial killer.",
+    "genres": ["Crime", "Drama", "Thriller"],
+    "cast": ["Jodie Foster", "Anthony Hopkins", "Scott Glenn", "Ted Levine"],
+    "director": "Jonathan Demme",
+    "releaseYear": 1991,
+    "rating": 8.6,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/uS9m8OBk1A8eM9I042bx8XXpqAq.jpg"
+  },
+  {
+    "title": "Saving Private Ryan",
+    "plot": "Following the Normandy Landings, a group of U.S. soldiers go behind enemy lines to retrieve a paratrooper whose brothers have been killed in action.",
+    "genres": ["Drama", "War"],
+    "cast": ["Tom Hanks", "Matt Damon", "Tom Sizemore", "Edward Burns"],
+    "director": "Steven Spielberg",
+    "releaseYear": 1998,
+    "rating": 8.6,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/uqx37CimzIsWz3c6NX5s3aN8D5b.jpg"
+  },
+  {
+    "title": "Spirited Away",
+    "plot": "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits, and where humans are changed into beasts.",
+    "genres": ["Animation", "Adventure", "Family"],
+    "cast": ["Rumi Hiiragi", "Miyu Irino", "Mari Natsuki", "Takashi Naito"],
+    "director": "Hayao Miyazaki",
+    "releaseYear": 2001,
+    "rating": 8.6,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg"
+  },
+  {
+    "title": "The Departed",
+    "plot": "An undercover cop and a mole in the police attempt to identify each other while infiltrating an Irish gang in South Boston.",
+    "genres": ["Crime", "Drama", "Thriller"],
+    "cast": ["Leonardo DiCaprio", "Matt Damon", "Jack Nicholson", "Mark Wahlberg"],
+    "director": "Martin Scorsese",
+    "releaseYear": 2006,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/nT97ifVT2J1yMQmeq20Qblg61T.jpg"
+  },
+  {
+    "title": "The Usual Suspects",
+    "plot": "A sole survivor tells of the twisty events leading up to a horrific gun battle on a boat, which began when five criminals met at a seemingly random police lineup.",
+    "genres": ["Crime", "Mystery", "Thriller"],
+    "cast": ["Kevin Spacey", "Gabriel Byrne", "Benicio Del Toro", "Kevin Pollak"],
+    "director": "Bryan Singer",
+    "releaseYear": 1995,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/9Zb9VspN5K8nXBZYjDmWqxLhqz9.jpg"
+  },
+  {
+    "title": "Léon: The Professional",
+    "plot": "A professional assassin rescues a teenage girl whose parents were killed in a police raid, and she soon becomes his protégée and learns the assassin's trade.",
+    "genres": ["Action", "Crime", "Drama"],
+    "cast": ["Jean Reno", "Natalie Portman", "Gary Oldman", "Danny Aiello"],
+    "director": "Luc Besson",
+    "releaseYear": 1994,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/yI6X2cCM5YPJtxMhUd3dPGqDAhw.jpg"
+  },
+  {
+    "title": "The Intouchables",
+    "plot": "After he becomes a quadriplegic from a paragliding accident, an aristocrat hires a young man from the projects to be his caregiver.",
+    "genres": ["Biography", "Comedy", "Drama"],
+    "cast": ["François Cluzet", "Omar Sy", "Anne Le Ny", "Audrey Fleurot"],
+    "director": "Olivier Nakache",
+    "releaseYear": 2011,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/4mFsNQwbD0F237Tx7gAPotd0nbJ.jpg"
+  },
+  {
+    "title": "City of God",
+    "plot": "In the slums of Rio, two kids' paths diverge as one struggles to become a photographer and the other a kingpin.",
+    "genres": ["Crime", "Drama"],
+    "cast": ["Alexandre Rodrigues", "Leandro Firmino", "Matheus Nachtergaele", "Phellipe Haagensen"],
+    "director": "Fernando Meirelles",
+    "releaseYear": 2002,
+    "rating": 8.6,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/k7eYdGvTPl8P3sJUKJaLlJs0PfO.jpg"
+  },
+  {
+    "title": "American History X",
+    "plot": "A former neo-nazi skinhead tries to prevent his younger brother from going down the same wrong path that he did.",
+    "genres": ["Drama"],
+    "cast": ["Edward Norton", "Edward Furlong", "Beverly D'Angelo", "Avery Brooks"],
+    "director": "Tony Kaye",
+    "releaseYear": 1998,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/fXepRAYOx1qC3wju7XdDGx60775.jpg"
+  },
+  {
+    "title": "Schindler's List",
+    "plot": "In German-occupied Poland during World War II, industrialist Oskar Schindler gradually becomes concerned for his Jewish workforce after witnessing their persecution by the Nazis.",
+    "genres": ["Biography", "Drama", "History"],
+    "cast": ["Liam Neeson", "Ben Kingsley", "Ralph Fiennes", "Caroline Goodall"],
+    "director": "Steven Spielberg",
+    "releaseYear": 1993,
+    "rating": 9.0,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg"
+  },
+  {
+    "title": "Life Is Beautiful",
+    "plot": "When an open-minded Jewish waiter and his son become victims of the Holocaust, he uses a perfect mixture of will, humor and imagination to protect his son from the dangers around their camp.",
+    "genres": ["Comedy", "Drama", "Romance"],
+    "cast": ["Roberto Benigni", "Nicoletta Braschi", "Giorgio Cantarini", "Giustino Durano"],
+    "director": "Roberto Benigni",
+    "releaseYear": 1997,
+    "rating": 8.6,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/6UD6IIYI69WbK0b9gV7FNZ3dHCN.jpg"
+  },
+  {
+    "title": "Apocalypse Now",
+    "plot": "A U.S. Army officer serving in Vietnam is tasked with assassinating a renegade Special Forces Colonel who sees himself as a god.",
+    "genres": ["Drama", "War"],
+    "cast": ["Martin Sheen", "Marlon Brando", "Robert Duvall", "Laurence Fishburne"],
+    "director": "Francis Ford Coppola",
+    "releaseYear": 1979,
+    "rating": 8.4,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/gQB8Y5RCMkv2zwzFHbUJX3kAhvA.jpg"
+  },
+  {
+    "title": "The Grand Budapest Hotel",
+    "plot": "A writer encounters the owner of an aging high-class hotel, who tells him of his early years serving as a lobby boy in the hotel's glorious years under an exceptional concierge.",
+    "genres": ["Adventure", "Comedy", "Crime"],
+    "cast": ["Ralph Fiennes", "F. Murray Abraham", "Mathieu Amalric", "Adrien Brody"],
+    "director": "Wes Anderson",
+    "releaseYear": 2014,
+    "rating": 8.1,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg"
+  },
+  {
+    "title": "Casablanca",
+    "plot": "A cynical expatriate American cafe owner struggles to decide whether or not to help his former lover and her fugitive husband escape the Nazis in French Morocco.",
+    "genres": ["Drama", "Romance", "War"],
+    "cast": ["Humphrey Bogart", "Ingrid Bergman", "Paul Henreid", "Claude Rains"],
+    "director": "Michael Curtiz",
+    "releaseYear": 1942,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/5K7cOHoay2mZusSLezBOY0Qxh8a.jpg"
+  },
+  {
+    "title": "Once Upon a Time in the West",
+    "plot": "A mysterious stranger with a harmonica joins forces with a notorious desperado to protect a beautiful widow from a ruthless assassin working for the railroad.",
+    "genres": ["Western"],
+    "cast": ["Henry Fonda", "Charles Bronson", "Claudia Cardinale", "Jason Robards"],
+    "director": "Sergio Leone",
+    "releaseYear": 1968,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/qbYgqOczabWNn2XKwgMtVrntD6P.jpg"
+  },
+  {
+    "title": "Rear Window",
+    "plot": "A wheelchair-bound photographer spies on his neighbors from his Greenwich Village courtyard apartment window, and becomes convinced one of them has committed murder.",
+    "genres": ["Mystery", "Thriller"],
+    "cast": ["James Stewart", "Grace Kelly", "Wendell Corey", "Thelma Ritter"],
+    "director": "Alfred Hitchcock",
+    "releaseYear": 1954,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/ILVF0eJxHMddjxeQhswFtpMtqx.jpg"
+  },
+  {
+    "title": "Alien",
+    "plot": "After investigating a mysterious transmission of unknown origin, the crew of a commercial spacecraft encounters a deadly lifeform.",
+    "genres": ["Horror", "Sci-Fi"],
+    "cast": ["Sigourney Weaver", "Tom Skerritt", "John Hurt", "Veronica Cartwright"],
+    "director": "Ridley Scott",
+    "releaseYear": 1979,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/vfrQk5IPloGg1v9Rzbh2Eg3VGyM.jpg"
+  },
+  {
+    "title": "Cinema Paradiso",
+    "plot": "A filmmaker recalls his childhood when falling in love with the pictures at the cinema of his home village and forms a deep friendship with the cinema's projectionist.",
+    "genres": ["Drama", "Romance"],
+    "cast": ["Philippe Noiret", "Enzo Cannavale", "Antonella Attili", "Salvatore Cascio"],
+    "director": "Giuseppe Tornatore",
+    "releaseYear": 1988,
+    "rating": 8.5,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/gCI2AeMV4IHSewhJkzsur5MEp6R.jpg"
+  },
+  {
+    "title": "Paths of Glory",
+    "plot": "After refusing to attack an enemy position, a general accuses the soldiers of cowardice and their commanding officer must defend them.",
+    "genres": ["Drama", "War"],
+    "cast": ["Kirk Douglas", "Ralph Meeker", "Adolphe Menjou", "George Macready"],
+    "director": "Stanley Kubrick",
+    "releaseYear": 1957,
+    "rating": 8.4,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/sUO2raharribVKHB7j7PkH4sPdU.jpg"
+  },
+  {
+    "title": "The Truman Show",
+    "plot": "An insurance salesman discovers his whole life is actually a reality TV show.",
+    "genres": ["Comedy", "Drama", "Sci-Fi"],
+    "cast": ["Jim Carrey", "Ed Harris", "Laura Linney", "Noah Emmerich"],
+    "director": "Peter Weir",
+    "releaseYear": 1998,
+    "rating": 8.2,
+    "posterUrl": "https://image.tmdb.org/t/p/w500/vuza0WqY239yBXOadKlGwJsZJFE.jpg"
+  }
+]

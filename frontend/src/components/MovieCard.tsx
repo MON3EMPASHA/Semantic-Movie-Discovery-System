@@ -14,7 +14,14 @@ export const MovieCard = ({ movie, onSelect, isActive }: Props) => (
       isActive ? "border-emerald-400" : "border-white/10"
     }`}
   >
-    {movie.posterUrl ? (
+    {movie.posterGridFSId ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={`http://localhost:4000/api/movies/${movie.id}/poster`}
+        alt={`${movie.title} poster`}
+        className="mb-3 h-64 w-full rounded-lg object-cover"
+      />
+    ) : movie.posterUrl ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={movie.posterUrl}

@@ -12,6 +12,19 @@ export default function AdminPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [missingPosters, setMissingPosters] = useState<Movie[]>([]);
+  const refreshMissing = async () => {
+    try {
+      const { getMissingPosters } = await import('../../lib/extendedApi');
+      const res = await getMissingPosters(500);
+      setMissingPosters(res.results as Movie[]);
+      return res.count;
+    } catch (err) {
+      console.error('Failed to refresh missing posters', err);
+      return 0;
+    }
+  };
   const [formData, setFormData] = useState<Partial<CreateMovieDTO>>({
     title: '',
     genres: [],
@@ -61,13 +74,14 @@ export default function AdminPage() {
       };
 
       if (editingMovie) {
-        await updateMovie(editingMovie.id, data);
+        await updateMovie(editingMovie.id, data, posterFile || undefined);
       } else {
-        await createMovie(data);
+        await createMovie(data, posterFile || undefined);
       }
 
       setShowForm(false);
       setEditingMovie(null);
+      setPosterFile(null);
       setFormData({
         title: '',
         genres: [],
@@ -81,6 +95,10 @@ export default function AdminPage() {
       });
       loadMovies();
     } catch (err) {
+      console.error('=== MOVIE SAVE ERROR ===');
+      console.error('Error:', err);
+      console.error('Error message:', err instanceof Error ? err.message : String(err));
+      console.error('========================');
       setError(err instanceof Error ? err.message : 'Failed to save movie');
     } finally {
       setLoading(false);
@@ -138,29 +156,153 @@ export default function AdminPage() {
           <div>
             <h1 className="text-3xl font-semibold">Movie Admin Panel</h1>
             <p className="text-slate-400">Manage your movie database</p>
+            <a href="/" className="text-sm text-emerald-400 hover:underline mt-2 inline-block">
+              ← Back to Search
+            </a>
           </div>
-          <button
-            onClick={() => {
-              setEditingMovie(null);
-              setFormData({
-                title: '',
-                genres: [],
-                cast: [],
-                director: '',
-                releaseYear: undefined,
-                plot: '',
-                script: '',
-                trailerUrl: '',
-                posterUrl: '',
-                rating: undefined,
-              });
-              setShowForm(true);
-            }}
-            className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-black transition hover:bg-emerald-400"
-          >
-            + Add Movie
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                  const { backfillPosters } = await import('../../lib/extendedApi');
+                  const result = await backfillPosters();
+                  alert(`Backfill done. Updated: ${result.updated}, Failed: ${result.failed}`);
+                  loadMovies();
+                  await refreshMissing();
+                } catch (err) {
+                  setError('Failed to backfill posters');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white transition hover:bg-indigo-500"
+            >
+              🖼️ Backfill Posters
+            </button>
+            <button
+              onClick={async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                  const count = await refreshMissing();
+                  if (count === 0) {
+                    alert('No movies are missing posters.');
+                  }
+                } catch (err) {
+                  setError('Failed to load missing posters');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="rounded-lg bg-cyan-600 px-4 py-2 font-semibold text-white transition hover:bg-cyan-500"
+            >
+              🔍 Show Missing Posters
+            </button>
+            <button
+              onClick={async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                  const { dedupeMovies } = await import('../../lib/extendedApi');
+                  const result = await dedupeMovies();
+                  alert(`Deduped. Removed: ${result.removed}, Kept: ${result.kept}`);
+                  loadMovies();
+                } catch (err) {
+                  setError('Failed to deduplicate movies');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="rounded-lg bg-amber-600 px-4 py-2 font-semibold text-white transition hover:bg-amber-500"
+            >
+              🧹 Deduplicate
+            </button>
+            <button
+              onClick={async () => {
+                if (confirm('Import 20 additional movies? Duplicates will be skipped.')) {
+                  setLoading(true);
+                  try {
+                    const { importBatch2Movies } = await import('../../lib/extendedApi');
+                    await importBatch2Movies();
+                    alert('Import started! Check server logs for progress. Refresh in 30 seconds.');
+                  } catch (err) {
+                    setError('Failed to start import');
+                  } finally {
+                    setLoading(false);
+                  }
+                }
+              }}
+              className="rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white transition hover:bg-purple-500"
+            >
+              📥 Import 20 More Movies
+            </button>
+            <button
+              onClick={() => {
+                setEditingMovie(null);
+                setPosterFile(null);
+                setFormData({
+                  title: '',
+                  genres: [],
+                  cast: [],
+                  director: '',
+                  releaseYear: undefined,
+                  plot: '',
+                  script: '',
+                  trailerUrl: '',
+                  posterUrl: '',
+                  rating: undefined,
+                });
+                setShowForm(true);
+              }}
+              className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-black transition hover:bg-emerald-400"
+            >
+              + Add Movie
+            </button>
+          </div>
         </div>
+
+        {missingPosters.length > 0 && (
+          <div className="mb-8 rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold">Missing Posters ({missingPosters.length})</h3>
+              <span className="text-sm text-slate-400">Edit these and set a valid poster URL, then run Backfill.</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {missingPosters.map((m) => (
+                <div key={m.id} className="rounded-lg border border-white/10 bg-slate-900/60 p-3 text-sm">
+                  <div className="font-semibold text-white">{m.title}</div>
+                  <div className="text-slate-400 text-xs">Year: {m.releaseYear ?? '—'}</div>
+                  <div className="text-slate-400 text-xs">Poster URL: {m.posterUrl ? m.posterUrl : 'None'}</div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      className="rounded bg-emerald-600 px-3 py-1 text-xs font-semibold text-white"
+                      onClick={() => {
+                        setEditingMovie(m);
+                        setFormData({
+                          title: m.title,
+                          genres: m.genres,
+                          cast: m.cast,
+                          director: m.director,
+                          releaseYear: m.releaseYear,
+                          plot: m.plot,
+                          trailerUrl: m.trailerUrl,
+                          posterUrl: m.posterUrl,
+                          rating: m.rating,
+                        });
+                        setShowForm(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 rounded-lg bg-rose-900/50 border border-rose-500 p-4 text-rose-200">
@@ -260,6 +402,19 @@ export default function AdminPage() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium mb-1">Poster Image (Optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPosterFile(e.target.files?.[0] || null)}
+                  className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
+                />
+                {posterFile && (
+                  <p className="mt-2 text-sm text-emerald-400">Selected: {posterFile.name}</p>
+                )}
+              </div>
+
               <div className="flex gap-4">
                 <button
                   type="submit"
@@ -273,6 +428,7 @@ export default function AdminPage() {
                   onClick={() => {
                     setShowForm(false);
                     setEditingMovie(null);
+                    setPosterFile(null);
                   }}
                   className="rounded-lg border border-white/10 px-6 py-2 transition hover:bg-white/5"
                 >
@@ -299,13 +455,19 @@ export default function AdminPage() {
                       key={`admin-movie-${movie.id || movie._id || index}-${index}`}
                       className="flex gap-4 rounded-xl border border-white/10 bg-white/5 p-4"
                     >
-                      {movie.posterUrl && (
+                      {movie.posterGridFSId ? (
+                        <img
+                          src={`http://localhost:4000/api/movies/${movie.id}/poster`}
+                          alt={movie.title}
+                          className="h-32 w-24 rounded object-cover"
+                        />
+                      ) : movie.posterUrl ? (
                         <img
                           src={movie.posterUrl}
                           alt={movie.title}
                           className="h-32 w-24 rounded object-cover"
                         />
-                      )}
+                      ) : null}
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold">{movie.title}</h3>
                         <p className="text-sm text-slate-400">
