@@ -14,25 +14,27 @@ export const MovieCard = ({ movie, onSelect, isActive }: Props) => (
       isActive ? "border-emerald-400" : "border-white/10"
     }`}
   >
-    {movie.posterGridFSId ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={`http://localhost:4000/api/movies/${movie.id}/poster`}
-        alt={`${movie.title} poster`}
-        className="mb-3 h-64 w-full rounded-lg object-cover"
-      />
-    ) : movie.posterUrl ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={movie.posterUrl}
-        alt={`${movie.title} poster`}
-        className="mb-3 h-64 w-full rounded-lg object-cover"
-      />
-    ) : (
-      <div className="mb-3 flex h-64 w-full items-center justify-center rounded-lg bg-slate-800 text-sm text-slate-400">
-        Poster unavailable
-      </div>
-    )}
+    <div className="mb-3 h-64 w-full overflow-hidden rounded-lg bg-slate-800">
+      {movie.posterGridFSId ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`http://localhost:4000/api/movies/${movie.id}/poster`}
+          alt={`${movie.title} poster`}
+          className="h-full w-full object-cover"
+        />
+      ) : movie.posterUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={movie.posterUrl}
+          alt={`${movie.title} poster`}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
+          Poster unavailable
+        </div>
+      )}
+    </div>
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">
         <p className="text-lg font-semibold text-white">{movie.title}</p>
@@ -60,7 +62,3 @@ export const MovieCard = ({ movie, onSelect, isActive }: Props) => (
     </div>
   </button>
 );
-
-
-
-

@@ -61,13 +61,30 @@ export default function AdminPage() {
     setError(null);
 
     try {
+      // Validate required fields
+      if (!formData.title || !formData.title.trim()) {
+        setError('Title is required');
+        setLoading(false);
+        return;
+      }
+      if (!formData.genres || formData.genres.length === 0) {
+        setError('At least one genre is required');
+        setLoading(false);
+        return;
+      }
+      if (!formData.plot || !formData.plot.trim()) {
+        setError('Plot is required');
+        setLoading(false);
+        return;
+      }
+
       const data: CreateMovieDTO = {
         title: formData.title!,
         genres: formData.genres || [],
         cast: formData.cast || [],
         director: formData.director,
         releaseYear: formData.releaseYear,
-        plot: formData.plot,
+        plot: formData.plot!,
         trailerUrl: formData.trailerUrl,
         posterUrl: formData.posterUrl,
         rating: formData.rating,
@@ -152,14 +169,11 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-950 px-4 py-10 text-white">
       <main className="mx-auto max-w-6xl">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold">Movie Admin Panel</h1>
-            <p className="text-slate-400">Manage your movie database</p>
-            <a href="/" className="text-sm text-emerald-400 hover:underline mt-2 inline-block">
-              ← Back to Search
-            </a>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold mb-2">Movie Admin Panel</h1>
+          <p className="text-slate-400">Manage your movie database</p>
+        </div>
+        <div className="mb-8 flex items-center justify-end">
           <div className="flex gap-3">
             <button
               onClick={async () => {
@@ -317,7 +331,9 @@ export default function AdminPage() {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Title *</label>
+                <label className="block text-sm font-medium mb-1">
+                  Title <span className="text-red-400">*</span> <span className="text-slate-400 text-xs">(Required)</span>
+                </label>
                 <input
                   type="text"
                   required
@@ -329,7 +345,9 @@ export default function AdminPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Director</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Director <span className="text-slate-400 text-xs">(Optional)</span>
+                  </label>
                   <input
                     type="text"
                     value={formData.director || ''}
@@ -338,7 +356,9 @@ export default function AdminPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Release Year</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Release Year <span className="text-slate-400 text-xs">(Optional)</span>
+                  </label>
                   <input
                     type="number"
                     value={formData.releaseYear || ''}
@@ -351,9 +371,12 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Genres (comma-separated)</label>
+                <label className="block text-sm font-medium mb-1">
+                  Genres <span className="text-red-400">*</span> <span className="text-slate-400 text-xs">(Required)</span>
+                </label>
                 <input
                   type="text"
+                  required
                   value={formData.genres?.join(', ') || ''}
                   onChange={(e) =>
                     setFormData({
@@ -364,10 +387,13 @@ export default function AdminPage() {
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   placeholder="Action, Sci-Fi, Romance"
                 />
+                <p className="mt-1 text-xs text-slate-400">Comma-separated list (at least one genre required)</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Cast (comma-separated)</label>
+                <label className="block text-sm font-medium mb-1">
+                  Cast <span className="text-slate-400 text-xs">(Optional)</span>
+                </label>
                 <input
                   type="text"
                   value={formData.cast?.join(', ') || ''}
@@ -380,30 +406,58 @@ export default function AdminPage() {
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   placeholder="Actor 1, Actor 2, Actor 3"
                 />
+                <p className="mt-1 text-xs text-slate-400">Comma-separated list</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Plot</label>
+                <label className="block text-sm font-medium mb-1">
+                  Plot <span className="text-red-400">*</span> <span className="text-slate-400 text-xs">(Required)</span>
+                </label>
                 <textarea
+                  required
                   value={formData.plot || ''}
                   onChange={(e) => setFormData({ ...formData, plot: e.target.value })}
                   rows={3}
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
+                  placeholder="Enter movie plot description..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Poster URL</label>
+                <label className="block text-sm font-medium mb-1">
+                  Rating <span className="text-slate-400 text-xs">(Optional)</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  value={formData.rating || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, rating: Number(e.target.value) || undefined })
+                  }
+                  className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
+                  placeholder="0.0 - 10.0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Trailer URL <span className="text-slate-400 text-xs">(Optional)</span>
+                </label>
                 <input
                   type="url"
-                  value={formData.posterUrl || ''}
-                  onChange={(e) => setFormData({ ...formData, posterUrl: e.target.value })}
+                  value={formData.trailerUrl || ''}
+                  onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
+                  placeholder="https://..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Poster Image (Optional)</label>
+                <label className="block text-sm font-medium mb-1">
+                  Poster Image <span className="text-slate-400 text-xs">(Optional)</span>
+                </label>
                 <input
                   type="file"
                   accept="image/*"
@@ -413,6 +467,7 @@ export default function AdminPage() {
                 {posterFile && (
                   <p className="mt-2 text-sm text-emerald-400">Selected: {posterFile.name}</p>
                 )}
+                <p className="mt-1 text-xs text-slate-400">Upload a poster image file</p>
               </div>
 
               <div className="flex gap-4">

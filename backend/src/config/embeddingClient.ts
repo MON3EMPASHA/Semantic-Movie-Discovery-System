@@ -19,3 +19,9 @@ export const getEmbeddingClient = (): OpenAI => {
 
 
 
+
+
+
+
+
+

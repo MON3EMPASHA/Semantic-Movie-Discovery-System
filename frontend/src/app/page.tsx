@@ -55,33 +55,19 @@ export default function Home() {
     <div className="min-h-screen bg-slate-950 px-4 py-10 text-white">
       <main className="mx-auto flex max-w-6xl flex-col gap-8">
         <header className="space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">
-              CineGraph AI
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-emerald-300 mb-2">
+              Semantic Movie Discovery System
             </p>
-            <div className="flex gap-2">
-              <a
-                href="/dashboard"
-                className="rounded-lg border border-white/10 px-4 py-2 text-sm transition hover:bg-white/5"
-              >
-                📊 Dashboard
-              </a>
-              <a
-                href="/admin"
-                className="rounded-lg border border-white/10 px-4 py-2 text-sm transition hover:bg-white/5"
-              >
-                Admin Panel
-              </a>
-            </div>
+            <h1 className="text-3xl font-semibold md:text-4xl">
+              Semantic movie discovery powered by MongoDB + Vector Search
+            </h1>
+            <p className="text-slate-300 md:w-3/4 mt-2">
+              Describe the story you want to watch in natural language and we'll
+              surface titles whose scripts, plots, and trailers feel the closest
+              match.
+            </p>
           </div>
-          <h1 className="text-3xl font-semibold md:text-4xl">
-            Semantic movie discovery powered by MongoDB + Vector Search
-          </h1>
-          <p className="text-slate-300 md:w-3/4">
-            Describe the story you want to watch in natural language and we’ll
-            surface titles whose scripts, plots, and trailers feel the closest
-            match.
-          </p>
         </header>
 
         <form

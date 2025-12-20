@@ -1,8 +1,6 @@
 import { env } from "../config/env";
 import { logger } from "../utils/logger";
 
-// Cache the pipeline instance to avoid re-initializing on every call
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let localPipeline: any = null;
 let pipelineModel: string | null = null;
 // Cache the pipeline import to avoid re-importing the module
