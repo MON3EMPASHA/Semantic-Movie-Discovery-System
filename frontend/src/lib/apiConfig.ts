@@ -1,9 +1,14 @@
 /**
  * Get the API base URL from environment variable
  * Falls back to localhost for development
+ * 
+ * Expected format: https://semantic-movie-discovery-system-production.up.railway.app/api
  */
 export const getApiBaseUrl = (): string => {
-  return process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
+  const url = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
+  
+  // Ensure URL doesn't have trailing slash
+  return url.endsWith('/') ? url.slice(0, -1) : url;
 };
 
 /**
@@ -20,5 +25,15 @@ export const getApiBaseUrlWithoutApi = (): string => {
  * Get the poster image URL for a movie
  */
 export const getPosterUrl = (movieId: string): string => {
-  return `${getApiBaseUrlWithoutApi()}/api/movies/${movieId}/poster`;
+  const baseUrl = getApiBaseUrlWithoutApi();
+  // Ensure we have /api in the path
+  return `${baseUrl}/api/movies/${movieId}/poster`;
 };
+
+/**
+ * Log the current API base URL (for debugging)
+ * Only logs in development mode
+ */
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  console.log('API Base URL:', getApiBaseUrl());
+}
