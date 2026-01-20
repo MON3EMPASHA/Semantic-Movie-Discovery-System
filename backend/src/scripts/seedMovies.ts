@@ -152,8 +152,9 @@ async function processMovie(tmdbMovie: TMDBMovie): Promise<boolean> {
 
     let releaseYear: number | undefined;
     if (details.release_date && details.release_date.length > 0) {
-      const yearPart = details.release_date.split("-")[0];
-      if (yearPart) {
+      const parts = details.release_date.split("-");
+      const yearPart = parts[0];
+      if (yearPart && yearPart.length > 0) {
         const parsedYear = parseInt(yearPart, 10);
         releaseYear = isNaN(parsedYear) ? undefined : parsedYear;
       } else {

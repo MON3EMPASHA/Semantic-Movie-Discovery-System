@@ -36,6 +36,8 @@ export const getVectorClient = (): VectorClient => {
       }
       const params: QdrantClientParams = {
         url: env.VECTOR_DB_URL,
+        timeout: 30000, // 30 seconds timeout
+        checkCompatibility: false, // Disable version check to avoid warnings
       };
 
       if (env.VECTOR_DB_API_KEY) {
