@@ -289,7 +289,7 @@ PORT=4000
 MONGODB_URI=mongodb://localhost:27017/movies
 
 # Vector Database (choose one)
-VECTOR_DB_PROVIDER=qdrant  # or "pinecone" or "chroma"
+VECTOR_DB_PROVIDER=qdrant
 VECTOR_DB_URL=http://localhost:6333  # For Qdrant
 VECTOR_DB_API_KEY=your_key  # For Qdrant Cloud/Pinecone
 VECTOR_COLLECTION=movies
