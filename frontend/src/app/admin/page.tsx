@@ -1,8 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { getAllMovies, createMovie, updateMovie, deleteMovie, getMovie } from '../../lib/api';
-import type { Movie, CreateMovieDTO, MovieListResponse } from '../../types/movie';
+import { useState, useEffect } from "react";
+import {
+  getAllMovies,
+  createMovie,
+  updateMovie,
+  deleteMovie,
+  getMovie,
+} from "../../lib/api";
+import type {
+  Movie,
+  CreateMovieDTO,
+  MovieListResponse,
+} from "../../types/movie";
 
 export default function AdminPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -16,24 +26,24 @@ export default function AdminPage() {
   const [missingPosters, setMissingPosters] = useState<Movie[]>([]);
   const refreshMissing = async () => {
     try {
-      const { getMissingPosters } = await import('../../lib/extendedApi');
+      const { getMissingPosters } = await import("../../lib/extendedApi");
       const res = await getMissingPosters(500);
       setMissingPosters(res.results as Movie[]);
       return res.count;
     } catch (err) {
-      console.error('Failed to refresh missing posters', err);
+      console.error("Failed to refresh missing posters", err);
       return 0;
     }
   };
   const [formData, setFormData] = useState<Partial<CreateMovieDTO>>({
-    title: '',
+    title: "",
     genres: [],
     cast: [],
-    director: '',
+    director: "",
     releaseYear: undefined,
-    plot: '',
-    trailerUrl: '',
-    posterUrl: '',
+    plot: "",
+    trailerUrl: "",
+    posterUrl: "",
     rating: undefined,
   });
 
@@ -45,7 +55,7 @@ export default function AdminPage() {
       setMovies(response.movies);
       setTotalPages(response.totalPages);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load movies');
+      setError(err instanceof Error ? err.message : "Failed to load movies");
     } finally {
       setLoading(false);
     }
@@ -63,17 +73,17 @@ export default function AdminPage() {
     try {
       // Validate required fields
       if (!formData.title || !formData.title.trim()) {
-        setError('Title is required');
+        setError("Title is required");
         setLoading(false);
         return;
       }
       if (!formData.genres || formData.genres.length === 0) {
-        setError('At least one genre is required');
+        setError("At least one genre is required");
         setLoading(false);
         return;
       }
       if (!formData.plot || !formData.plot.trim()) {
-        setError('Plot is required');
+        setError("Plot is required");
         setLoading(false);
         return;
       }
@@ -100,23 +110,26 @@ export default function AdminPage() {
       setEditingMovie(null);
       setPosterFile(null);
       setFormData({
-        title: '',
+        title: "",
         genres: [],
         cast: [],
-        director: '',
+        director: "",
         releaseYear: undefined,
-        plot: '',
-        trailerUrl: '',
-        posterUrl: '',
+        plot: "",
+        trailerUrl: "",
+        posterUrl: "",
         rating: undefined,
       });
       loadMovies();
     } catch (err) {
-      console.error('=== MOVIE SAVE ERROR ===');
-      console.error('Error:', err);
-      console.error('Error message:', err instanceof Error ? err.message : String(err));
-      console.error('========================');
-      setError(err instanceof Error ? err.message : 'Failed to save movie');
+      console.error("=== MOVIE SAVE ERROR ===");
+      console.error("Error:", err);
+      console.error(
+        "Error message:",
+        err instanceof Error ? err.message : String(err),
+      );
+      console.error("========================");
+      setError(err instanceof Error ? err.message : "Failed to save movie");
     } finally {
       setLoading(false);
     }
@@ -124,7 +137,7 @@ export default function AdminPage() {
 
   const handleEdit = async (id: string) => {
     if (!id) {
-      setError('Invalid movie ID');
+      setError("Invalid movie ID");
       return;
     }
     try {
@@ -143,16 +156,16 @@ export default function AdminPage() {
       });
       setShowForm(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load movie');
+      setError(err instanceof Error ? err.message : "Failed to load movie");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!id) {
-      setError('Invalid movie ID');
+      setError("Invalid movie ID");
       return;
     }
-    if (!confirm('Are you sure you want to delete this movie?')) return;
+    if (!confirm("Are you sure you want to delete this movie?")) return;
 
     setLoading(true);
     setError(null);
@@ -160,7 +173,7 @@ export default function AdminPage() {
       await deleteMovie(id);
       loadMovies();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete movie');
+      setError(err instanceof Error ? err.message : "Failed to delete movie");
     } finally {
       setLoading(false);
     }
@@ -180,13 +193,16 @@ export default function AdminPage() {
                 setLoading(true);
                 setError(null);
                 try {
-                  const { backfillPosters } = await import('../../lib/extendedApi');
+                  const { backfillPosters } =
+                    await import("../../lib/extendedApi");
                   const result = await backfillPosters();
-                  alert(`Backfill done. Updated: ${result.updated}, Failed: ${result.failed}`);
+                  alert(
+                    `Backfill done. Updated: ${result.updated}, Failed: ${result.failed}`,
+                  );
                   loadMovies();
                   await refreshMissing();
                 } catch (err) {
-                  setError('Failed to backfill posters');
+                  setError("Failed to backfill posters");
                 } finally {
                   setLoading(false);
                 }
@@ -202,10 +218,10 @@ export default function AdminPage() {
                 try {
                   const count = await refreshMissing();
                   if (count === 0) {
-                    alert('No movies are missing posters.');
+                    alert("No movies are missing posters.");
                   }
                 } catch (err) {
-                  setError('Failed to load missing posters');
+                  setError("Failed to load missing posters");
                 } finally {
                   setLoading(false);
                 }
@@ -219,12 +235,15 @@ export default function AdminPage() {
                 setLoading(true);
                 setError(null);
                 try {
-                  const { dedupeMovies } = await import('../../lib/extendedApi');
+                  const { dedupeMovies } =
+                    await import("../../lib/extendedApi");
                   const result = await dedupeMovies();
-                  alert(`Deduped. Removed: ${result.removed}, Kept: ${result.kept}`);
+                  alert(
+                    `Deduped. Removed: ${result.removed}, Kept: ${result.kept}`,
+                  );
                   loadMovies();
                 } catch (err) {
-                  setError('Failed to deduplicate movies');
+                  setError("Failed to deduplicate movies");
                 } finally {
                   setLoading(false);
                 }
@@ -235,14 +254,21 @@ export default function AdminPage() {
             </button>
             <button
               onClick={async () => {
-                if (confirm('Import 20 additional movies? Duplicates will be skipped.')) {
+                if (
+                  confirm(
+                    "Import 20 additional movies? Duplicates will be skipped.",
+                  )
+                ) {
                   setLoading(true);
                   try {
-                    const { importBatch2Movies } = await import('../../lib/extendedApi');
+                    const { importBatch2Movies } =
+                      await import("../../lib/extendedApi");
                     await importBatch2Movies();
-                    alert('Import started! Check server logs for progress. Refresh in 30 seconds.');
+                    alert(
+                      "Import started! Check server logs for progress. Refresh in 30 seconds.",
+                    );
                   } catch (err) {
-                    setError('Failed to start import');
+                    setError("Failed to start import");
                   } finally {
                     setLoading(false);
                   }
@@ -257,15 +283,14 @@ export default function AdminPage() {
                 setEditingMovie(null);
                 setPosterFile(null);
                 setFormData({
-                  title: '',
+                  title: "",
                   genres: [],
                   cast: [],
-                  director: '',
+                  director: "",
                   releaseYear: undefined,
-                  plot: '',
-                  script: '',
-                  trailerUrl: '',
-                  posterUrl: '',
+                  plot: "",
+                  trailerUrl: "",
+                  posterUrl: "",
                   rating: undefined,
                 });
                 setShowForm(true);
@@ -280,15 +305,26 @@ export default function AdminPage() {
         {missingPosters.length > 0 && (
           <div className="mb-8 rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Missing Posters ({missingPosters.length})</h3>
-              <span className="text-sm text-slate-400">Edit these and set a valid poster URL, then run Backfill.</span>
+              <h3 className="text-lg font-semibold">
+                Missing Posters ({missingPosters.length})
+              </h3>
+              <span className="text-sm text-slate-400">
+                Edit these and set a valid poster URL, then run Backfill.
+              </span>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               {missingPosters.map((m) => (
-                <div key={m.id} className="rounded-lg border border-white/10 bg-slate-900/60 p-3 text-sm">
+                <div
+                  key={m.id}
+                  className="rounded-lg border border-white/10 bg-slate-900/60 p-3 text-sm"
+                >
                   <div className="font-semibold text-white">{m.title}</div>
-                  <div className="text-slate-400 text-xs">Year: {m.releaseYear ?? '—'}</div>
-                  <div className="text-slate-400 text-xs">Poster URL: {m.posterUrl ? m.posterUrl : 'None'}</div>
+                  <div className="text-slate-400 text-xs">
+                    Year: {m.releaseYear ?? "—"}
+                  </div>
+                  <div className="text-slate-400 text-xs">
+                    Poster URL: {m.posterUrl ? m.posterUrl : "None"}
+                  </div>
                   <div className="mt-2 flex gap-2">
                     <button
                       className="rounded bg-emerald-600 px-3 py-1 text-xs font-semibold text-white"
@@ -306,7 +342,7 @@ export default function AdminPage() {
                           rating: m.rating,
                         });
                         setShowForm(true);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                     >
                       Edit
@@ -327,18 +363,21 @@ export default function AdminPage() {
         {showForm && (
           <div className="mb-8 rounded-xl border border-white/10 bg-white/5 p-6">
             <h2 className="mb-4 text-xl font-semibold">
-              {editingMovie ? 'Edit Movie' : 'Add New Movie'}
+              {editingMovie ? "Edit Movie" : "Add New Movie"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Title <span className="text-red-400">*</span> <span className="text-slate-400 text-xs">(Required)</span>
+                  Title <span className="text-red-400">*</span>{" "}
+                  <span className="text-slate-400 text-xs">(Required)</span>
                 </label>
                 <input
                   type="text"
                   required
-                  value={formData.title || ''}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  value={formData.title || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                 />
               </div>
@@ -346,24 +385,31 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Director <span className="text-slate-400 text-xs">(Optional)</span>
+                    Director{" "}
+                    <span className="text-slate-400 text-xs">(Optional)</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.director || ''}
-                    onChange={(e) => setFormData({ ...formData, director: e.target.value })}
+                    value={formData.director || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, director: e.target.value })
+                    }
                     className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Release Year <span className="text-slate-400 text-xs">(Optional)</span>
+                    Release Year{" "}
+                    <span className="text-slate-400 text-xs">(Optional)</span>
                   </label>
                   <input
                     type="number"
-                    value={formData.releaseYear || ''}
+                    value={formData.releaseYear || ""}
                     onChange={(e) =>
-                      setFormData({ ...formData, releaseYear: Number(e.target.value) || undefined })
+                      setFormData({
+                        ...formData,
+                        releaseYear: Number(e.target.value) || undefined,
+                      })
                     }
                     className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   />
@@ -372,51 +418,66 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Genres <span className="text-red-400">*</span> <span className="text-slate-400 text-xs">(Required)</span>
+                  Genres <span className="text-red-400">*</span>{" "}
+                  <span className="text-slate-400 text-xs">(Required)</span>
                 </label>
                 <input
                   type="text"
                   required
-                  value={formData.genres?.join(', ') || ''}
+                  value={formData.genres?.join(", ") || ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      genres: e.target.value.split(',').map((g) => g.trim()).filter(Boolean),
+                      genres: e.target.value
+                        .split(",")
+                        .map((g) => g.trim())
+                        .filter(Boolean),
                     })
                   }
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   placeholder="Action, Sci-Fi, Romance"
                 />
-                <p className="mt-1 text-xs text-slate-400">Comma-separated list (at least one genre required)</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Comma-separated list (at least one genre required)
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Cast <span className="text-slate-400 text-xs">(Optional)</span>
+                  Cast{" "}
+                  <span className="text-slate-400 text-xs">(Optional)</span>
                 </label>
                 <input
                   type="text"
-                  value={formData.cast?.join(', ') || ''}
+                  value={formData.cast?.join(", ") || ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      cast: e.target.value.split(',').map((c) => c.trim()).filter(Boolean),
+                      cast: e.target.value
+                        .split(",")
+                        .map((c) => c.trim())
+                        .filter(Boolean),
                     })
                   }
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   placeholder="Actor 1, Actor 2, Actor 3"
                 />
-                <p className="mt-1 text-xs text-slate-400">Comma-separated list</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Comma-separated list
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Plot <span className="text-red-400">*</span> <span className="text-slate-400 text-xs">(Required)</span>
+                  Plot <span className="text-red-400">*</span>{" "}
+                  <span className="text-slate-400 text-xs">(Required)</span>
                 </label>
                 <textarea
                   required
-                  value={formData.plot || ''}
-                  onChange={(e) => setFormData({ ...formData, plot: e.target.value })}
+                  value={formData.plot || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, plot: e.target.value })
+                  }
                   rows={3}
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   placeholder="Enter movie plot description..."
@@ -425,16 +486,20 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Rating <span className="text-slate-400 text-xs">(Optional)</span>
+                  Rating{" "}
+                  <span className="text-slate-400 text-xs">(Optional)</span>
                 </label>
                 <input
                   type="number"
                   min="0"
                   max="10"
                   step="0.1"
-                  value={formData.rating || ''}
+                  value={formData.rating || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, rating: Number(e.target.value) || undefined })
+                    setFormData({
+                      ...formData,
+                      rating: Number(e.target.value) || undefined,
+                    })
                   }
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   placeholder="0.0 - 10.0"
@@ -443,12 +508,15 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Trailer URL <span className="text-slate-400 text-xs">(Optional)</span>
+                  Trailer URL{" "}
+                  <span className="text-slate-400 text-xs">(Optional)</span>
                 </label>
                 <input
                   type="url"
-                  value={formData.trailerUrl || ''}
-                  onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
+                  value={formData.trailerUrl || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, trailerUrl: e.target.value })
+                  }
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                   placeholder="https://..."
                 />
@@ -456,7 +524,8 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Poster Image <span className="text-slate-400 text-xs">(Optional)</span>
+                  Poster Image{" "}
+                  <span className="text-slate-400 text-xs">(Optional)</span>
                 </label>
                 <input
                   type="file"
@@ -465,9 +534,13 @@ export default function AdminPage() {
                   className="w-full rounded-lg border border-white/10 bg-slate-900/70 p-2 text-white"
                 />
                 {posterFile && (
-                  <p className="mt-2 text-sm text-emerald-400">Selected: {posterFile.name}</p>
+                  <p className="mt-2 text-sm text-emerald-400">
+                    Selected: {posterFile.name}
+                  </p>
                 )}
-                <p className="mt-1 text-xs text-slate-400">Upload a poster image file</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Upload a poster image file
+                </p>
               </div>
 
               <div className="flex gap-4">
@@ -476,7 +549,7 @@ export default function AdminPage() {
                   disabled={loading}
                   className="rounded-lg bg-emerald-500 px-6 py-2 font-semibold text-black transition hover:bg-emerald-400 disabled:opacity-50"
                 >
-                  {loading ? 'Saving...' : editingMovie ? 'Update' : 'Create'}
+                  {loading ? "Saving..." : editingMovie ? "Update" : "Create"}
                 </button>
                 <button
                   type="button"
@@ -495,7 +568,9 @@ export default function AdminPage() {
         )}
 
         {loading && !showForm ? (
-          <div className="text-center py-12 text-slate-400">Loading movies...</div>
+          <div className="text-center py-12 text-slate-400">
+            Loading movies...
+          </div>
         ) : (
           <div className="space-y-4">
             {movies.length === 0 ? (
@@ -527,24 +602,32 @@ export default function AdminPage() {
                         <h3 className="text-lg font-semibold">{movie.title}</h3>
                         <p className="text-sm text-slate-400">
                           {movie.releaseYear && `${movie.releaseYear} • `}
-                          {movie.genres.join(', ')}
+                          {movie.genres.join(", ")}
                         </p>
                         {movie.director && (
-                          <p className="text-sm text-slate-400">Director: {movie.director}</p>
+                          <p className="text-sm text-slate-400">
+                            Director: {movie.director}
+                          </p>
                         )}
                         {movie.rating && (
-                          <p className="text-sm text-slate-400">Rating: {movie.rating}/10</p>
+                          <p className="text-sm text-slate-400">
+                            Rating: {movie.rating}/10
+                          </p>
                         )}
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleEdit(movie.id || movie._id || '')}
+                          onClick={() =>
+                            handleEdit(movie.id || movie._id || "")
+                          }
                           className="rounded-lg border border-white/10 px-4 py-2 text-sm transition hover:bg-white/5"
                         >
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(movie.id || movie._id || '')}
+                          onClick={() =>
+                            handleDelete(movie.id || movie._id || "")
+                          }
                           className="rounded-lg border border-rose-500/50 px-4 py-2 text-sm text-rose-400 transition hover:bg-rose-500/10"
                         >
                           Delete
@@ -567,7 +650,9 @@ export default function AdminPage() {
                       Page {page} of {totalPages}
                     </span>
                     <button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page === totalPages}
                       className="rounded-lg border border-white/10 px-4 py-2 disabled:opacity-50"
                     >
@@ -583,4 +668,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
