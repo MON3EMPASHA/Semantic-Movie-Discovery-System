@@ -4,14 +4,29 @@ import movieRoutes from './routes/movieRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
+import { env } from './config/env';
 
 const app = express();
 
+// Configure CORS origins
+const getCorsOrigins = (): string[] => {
+  // Default origins for development
+  const defaultOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+  
+  // If CORS_ORIGINS is set, parse it and combine with defaults
+  if (env.CORS_ORIGINS) {
+    const customOrigins = env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean);
+    return [...defaultOrigins, ...customOrigins];
+  }
+  
+  return defaultOrigins;
+};
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: getCorsOrigins(),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // Add request logging middleware
