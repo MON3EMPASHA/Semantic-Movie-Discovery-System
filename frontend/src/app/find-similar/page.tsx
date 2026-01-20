@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { searchMovies, fetchSimilarMovies, getMovie, getAllMovies } from '../../lib/api';
+import { getPosterUrl } from '../../lib/apiConfig';
 import type { MovieSummary, SimilarMovie, Movie } from '../../types/movie';
 
 export default function FindSimilarPage() {
@@ -169,7 +170,7 @@ export default function FindSimilarPage() {
                     >
                       {movie.posterGridFSId ? (
                         <img
-                          src={`http://localhost:4000/api/movies/${movie.id}/poster`}
+                          src={getPosterUrl(movie.id)}
                           alt={`${movie.title} poster`}
                           className="mb-3 h-48 w-full rounded-lg object-cover transition group-hover:scale-105"
                         />
@@ -226,7 +227,7 @@ export default function FindSimilarPage() {
               <div className="grid gap-6 md:grid-cols-[200px_1fr]">
                 {selectedMovie.posterGridFSId ? (
                   <img
-                    src={`http://localhost:4000/api/movies/${selectedMovie.id}/poster`}
+                    src={getPosterUrl(selectedMovie.id)}
                     alt={`${selectedMovie.title} poster`}
                     className="w-full rounded-lg shadow-lg"
                   />
@@ -292,7 +293,7 @@ export default function FindSimilarPage() {
                   {similarMovie.posterGridFSId ? (
                     <Link href={`/movies/${similarMovie.id}`}>
                       <img
-                        src={`http://localhost:4000/api/movies/${similarMovie.id}/poster`}
+                        src={getPosterUrl(similarMovie.id)}
                         alt={`${similarMovie.title} poster`}
                         className="w-full rounded-lg shadow-lg transition hover:scale-105 cursor-pointer"
                       />

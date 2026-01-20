@@ -5,3 +5,6 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Environment Variables (set in Netlify Dashboard):
+# NEXT_PUBLIC_API_BASE_URL=https://semantic-movie-discovery-system-production.up.railway.app/api

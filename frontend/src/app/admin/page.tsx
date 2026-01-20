@@ -8,6 +8,7 @@ import {
   deleteMovie,
   getMovie,
 } from "../../lib/api";
+import { getPosterUrl } from "../../lib/apiConfig";
 import type {
   Movie,
   CreateMovieDTO,
@@ -587,7 +588,7 @@ export default function AdminPage() {
                     >
                       {movie.posterGridFSId ? (
                         <img
-                          src={`http://localhost:4000/api/movies/${movie.id}/poster`}
+                          src={getPosterUrl(movie.id)}
                           alt={movie.title}
                           className="h-32 w-24 rounded object-cover"
                         />

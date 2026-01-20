@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getAllMovies } from "../../lib/api";
+import { getPosterUrl } from "../../lib/apiConfig";
 import type { Movie, MovieListResponse } from "../../types/movie";
 
 export default function MoviesPage() {
@@ -123,7 +124,7 @@ export default function MoviesPage() {
                 >
                   {movie.posterGridFSId ? (
                     <img
-                      src={`http://localhost:4000/api/movies/${movie.id}/poster`}
+                      src={getPosterUrl(movie.id)}
                       alt={`${movie.title} poster`}
                       className="mb-3 h-80 w-full rounded-lg object-cover transition group-hover:scale-105"
                     />

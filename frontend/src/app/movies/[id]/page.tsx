@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getMovie, fetchSimilarMovies } from '../../../lib/api';
 import { getEnhancedRecommendations } from '../../../lib/extendedApi';
+import { getPosterUrl } from '../../../lib/apiConfig';
 import type { Movie, SimilarMovie } from '../../../types/movie';
 
 export default function MovieDetailPage() {
@@ -97,7 +98,7 @@ export default function MovieDetailPage() {
           <div className="flex-shrink-0">
             {movie.posterGridFSId ? (
               <img
-                src={`http://localhost:4000/api/movies/${movie.id}/poster`}
+                src={getPosterUrl(movie.id)}
                 alt={`${movie.title} poster`}
                 className="w-full rounded-xl shadow-2xl"
               />
@@ -184,7 +185,7 @@ export default function MovieDetailPage() {
                 >
                   {similarMovie.posterGridFSId ? (
                     <img
-                      src={`http://localhost:4000/api/movies/${similarMovie.id}/poster`}
+                      src={getPosterUrl(similarMovie.id)}
                       alt={`${similarMovie.title} poster`}
                       className="h-24 w-16 rounded object-cover"
                     />
@@ -226,7 +227,7 @@ export default function MovieDetailPage() {
                 >
                   {recMovie.posterGridFSId ? (
                     <img
-                      src={`http://localhost:4000/api/movies/${recMovie.id}/poster`}
+                      src={getPosterUrl(recMovie.id)}
                       alt={`${recMovie.title} poster`}
                       className="h-24 w-16 rounded object-cover"
                     />

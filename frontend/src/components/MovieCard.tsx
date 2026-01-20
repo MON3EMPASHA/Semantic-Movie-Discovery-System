@@ -1,4 +1,5 @@
 import type { MovieSummary } from "../types/movie";
+import { getPosterUrl } from "../lib/apiConfig";
 
 interface Props {
   movie: MovieSummary;
@@ -18,7 +19,7 @@ export const MovieCard = ({ movie, onSelect, isActive }: Props) => (
       {movie.posterGridFSId ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={`http://localhost:4000/api/movies/${movie.id}/poster`}
+          src={getPosterUrl(movie.id)}
           alt={`${movie.title} poster`}
           className="h-full w-full object-cover"
         />
