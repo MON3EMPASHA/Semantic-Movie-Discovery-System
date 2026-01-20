@@ -1,7 +1,8 @@
 // Extended API types and utility functions
 import type { Movie, MovieSummary } from '../types/movie';
+import { getApiBaseUrl } from './apiConfig';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
+const API_BASE_URL = getApiBaseUrl();
 
 export interface FilterOptions {
   genres: string[];
