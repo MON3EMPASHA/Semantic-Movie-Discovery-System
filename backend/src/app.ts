@@ -27,21 +27,28 @@ const getCorsOrigins = (): string[] => {
 
 const corsOrigins = getCorsOrigins();
 
+// CORS configuration - must be before routes
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      return callback(null, true);
+    }
     
     if (corsOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`CORS blocked origin: ${origin}. Allowed origins:`, corsOrigins);
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`⚠️  CORS blocked origin: ${origin}`);
+      console.warn(`   Allowed origins:`, corsOrigins);
+      console.warn(`   Set CORS_ORIGINS environment variable in Railway to allow this origin`);
+      callback(new Error(`CORS: Origin ${origin} is not allowed`));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
 }));
 
 // Add request logging middleware

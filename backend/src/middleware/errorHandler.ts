@@ -1,11 +1,13 @@
 import type { NextFunction, Request, Response } from 'express';
 import { logger } from '../utils/logger';
 
-export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   logger.error('Unhandled error', {
     message: err.message,
     stack: err.stack,
     name: err.name,
+    path: req.path,
+    method: req.method,
   });
   
   // Determine status code
@@ -14,6 +16,15 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
     status = 400;
   } else if (err.message.includes('not found') || err.message.includes('Not Found')) {
     status = 404;
+  } else if (err.message.includes('CORS')) {
+    status = 403;
+  }
+  
+  // Ensure CORS headers are set even on error responses
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
   
   res.status(status).json({
