@@ -11,9 +11,9 @@ const envSchema = z.object({
   // TMDB API for movie seeding (optional)
   TMDB_API_KEY: z.string().optional(),
   // Embedding options - using local transformers.js
-  EMBEDDING_MODEL: z
-    .string()
-    .default("sentence-transformers/all-MiniLM-L6-v2"), // Local model using transformers.js (384 dims)
+  EMBEDDING_PROVIDER: z.string().optional(), // local, openai, etc.
+  EMBEDDING_MODEL: z.string().default("sentence-transformers/all-MiniLM-L6-v2"), // Local model using transformers.js (384 dims)
+  OPENAI_API_KEY: z.string().optional(), // Optional OpenAI API key
   // Vector DB options (use one)
   VECTOR_DB_PROVIDER: z
     .enum(["qdrant", "pinecone", "chroma"])
@@ -32,7 +32,7 @@ const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
   logger.error(
     "Invalid environment configuration",
-    parsed.error.flatten().fieldErrors
+    parsed.error.flatten().fieldErrors,
   );
   throw new Error("Invalid environment configuration");
 }

@@ -1,16 +1,16 @@
-import axios from 'axios';
-import { connectDatabase } from '../config/database';
-import { initializeGridFS } from '../services/gridfsService';
-import { initializeVectorDB } from '../config/initVectorDB';
-import { MovieModel } from '../models/Movie';
-import { ingestMovieWithImage } from '../services/ingestionService';
-import { logger } from '../utils/logger';
+import axios from "axios";
+import { connectDatabase } from "../config/database";
+import { initializeGridFS } from "../services/gridfsService";
+import { initializeVectorDB } from "../config/initVectorDB";
+import { MovieModel } from "../models/Movie";
+import { ingestMovieWithImage } from "../services/ingestionService";
+import { logger } from "../utils/logger";
 
 // TMDB API - Free for non-commercial use
 // Get your API key at: https://www.themoviedb.org/settings/api
-const TMDB_API_KEY = process.env.TMDB_API_KEY || 'YOUR_API_KEY_HERE';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+const TMDB_API_KEY = process.env.TMDB_API_KEY || "YOUR_API_KEY_HERE";
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 interface TMDBMovie {
   id: number;
@@ -42,25 +42,25 @@ interface TMDBMovieDetails {
 }
 
 const GENRE_MAP: Record<number, string> = {
-  28: 'Action',
-  12: 'Adventure',
-  16: 'Animation',
-  35: 'Comedy',
-  80: 'Crime',
-  99: 'Documentary',
-  18: 'Drama',
-  10751: 'Family',
-  14: 'Fantasy',
-  36: 'History',
-  27: 'Horror',
-  10402: 'Music',
-  9648: 'Mystery',
-  10749: 'Romance',
-  878: 'Science Fiction',
-  10770: 'TV Movie',
-  53: 'Thriller',
-  10752: 'War',
-  37: 'Western',
+  28: "Action",
+  12: "Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  14: "Fantasy",
+  36: "History",
+  27: "Horror",
+  10402: "Music",
+  9648: "Mystery",
+  10749: "Romance",
+  878: "Science Fiction",
+  10770: "TV Movie",
+  53: "Thriller",
+  10752: "War",
+  37: "Western",
 };
 
 /**
@@ -68,7 +68,7 @@ const GENRE_MAP: Record<number, string> = {
  */
 async function movieExists(title: string, year: number): Promise<boolean> {
   const existing = await MovieModel.findOne({
-    title: { $regex: new RegExp(`^${title}$`, 'i') },
+    title: { $regex: new RegExp(`^${title}$`, "i") },
     releaseYear: year,
   });
   return !!existing;
@@ -81,7 +81,7 @@ async function downloadImage(url: string): Promise<Buffer | null> {
   try {
     logger.info(`Downloading image: ${url}`);
     const response = await axios.get(url, {
-      responseType: 'arraybuffer',
+      responseType: "arraybuffer",
       timeout: 30000,
     });
     return Buffer.from(response.data);
@@ -94,10 +94,12 @@ async function downloadImage(url: string): Promise<Buffer | null> {
 /**
  * Fetch movie details from TMDB
  */
-async function fetchMovieDetails(movieId: number): Promise<TMDBMovieDetails | null> {
+async function fetchMovieDetails(
+  movieId: number,
+): Promise<TMDBMovieDetails | null> {
   try {
     const response = await axios.get(
-      `${TMDB_BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}&append_to_response=credits`
+      `${TMDB_BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}&append_to_response=credits`,
     );
     return response.data;
   } catch (error) {
@@ -112,7 +114,7 @@ async function fetchMovieDetails(movieId: number): Promise<TMDBMovieDetails | nu
 async function fetchPopularMovies(page = 1): Promise<TMDBMovie[]> {
   try {
     const response = await axios.get(
-      `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&page=${page}`
+      `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&page=${page}`,
     );
     return response.data.results || [];
   } catch (error) {
@@ -127,7 +129,7 @@ async function fetchPopularMovies(page = 1): Promise<TMDBMovie[]> {
 async function fetchTopRatedMovies(page = 1): Promise<TMDBMovie[]> {
   try {
     const response = await axios.get(
-      `${TMDB_BASE_URL}/movie/top_rated?api_key=${TMDB_API_KEY}&page=${page}`
+      `${TMDB_BASE_URL}/movie/top_rated?api_key=${TMDB_API_KEY}&page=${page}`,
     );
     return response.data.results || [];
   } catch (error) {
@@ -148,9 +150,18 @@ async function processMovie(tmdbMovie: TMDBMovie): Promise<boolean> {
       return false;
     }
 
-    const releaseYear = details.release_date
-      ? parseInt(details.release_date.split('-')[0])
-      : undefined;
+    let releaseYear: number | undefined;
+    if (details.release_date && details.release_date.length > 0) {
+      const yearPart = details.release_date.split("-")[0];
+      if (yearPart) {
+        const parsedYear = parseInt(yearPart, 10);
+        releaseYear = isNaN(parsedYear) ? undefined : parsedYear;
+      } else {
+        releaseYear = undefined;
+      }
+    } else {
+      releaseYear = undefined;
+    }
 
     // Check if movie already exists
     if (releaseYear && (await movieExists(details.title, releaseYear))) {
@@ -167,7 +178,8 @@ async function processMovie(tmdbMovie: TMDBMovie): Promise<boolean> {
 
     // Extract director
     const director =
-      details.credits?.crew?.find((person) => person.job === 'Director')?.name || undefined;
+      details.credits?.crew?.find((person) => person.job === "Director")
+        ?.name || undefined;
 
     // Extract genres
     const genres = details.genres.map((g) => g.name);
@@ -189,8 +201,12 @@ async function processMovie(tmdbMovie: TMDBMovie): Promise<boolean> {
       cast: cast.length > 0 ? cast : undefined,
       director,
       releaseYear,
-      rating: details.vote_average ? parseFloat(details.vote_average.toFixed(1)) : undefined,
-      posterUrl: details.poster_path ? `${TMDB_IMAGE_BASE}${details.poster_path}` : undefined,
+      rating: details.vote_average
+        ? parseFloat(details.vote_average.toFixed(1))
+        : undefined,
+      posterUrl: details.poster_path
+        ? `${TMDB_IMAGE_BASE}${details.poster_path}`
+        : undefined,
       metadata: {
         tmdbId: details.id,
         runtime: details.runtime,
@@ -204,8 +220,8 @@ async function processMovie(tmdbMovie: TMDBMovie): Promise<boolean> {
     await ingestMovieWithImage(
       movieData,
       posterBuffer || undefined,
-      'image/jpeg',
-      posterFilename
+      "image/jpeg",
+      posterFilename,
     );
 
     logger.info(`✓ Successfully ingested: ${details.title}`);
@@ -220,28 +236,30 @@ async function processMovie(tmdbMovie: TMDBMovie): Promise<boolean> {
  * Main seeding function
  */
 async function seedMovies() {
-  if (TMDB_API_KEY === 'YOUR_API_KEY_HERE') {
-    logger.error('❌ Please set TMDB_API_KEY in your .env file');
-    logger.info('Get your free API key at: https://www.themoviedb.org/settings/api');
+  if (TMDB_API_KEY === "YOUR_API_KEY_HERE") {
+    logger.error("❌ Please set TMDB_API_KEY in your .env file");
+    logger.info(
+      "Get your free API key at: https://www.themoviedb.org/settings/api",
+    );
     process.exit(1);
   }
 
   try {
     // Connect to database
-    logger.info('Connecting to database...');
+    logger.info("Connecting to database...");
     await connectDatabase();
     initializeGridFS();
     await initializeVectorDB();
 
-    logger.info('Starting movie seeding process...');
-    logger.info('='.repeat(50));
+    logger.info("Starting movie seeding process...");
+    logger.info("=".repeat(50));
 
     let successCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
 
     // Fetch popular movies (first 3 pages = ~60 movies)
-    logger.info('Fetching popular movies...');
+    logger.info("Fetching popular movies...");
     for (let page = 1; page <= 3; page++) {
       const movies = await fetchPopularMovies(page);
       logger.info(`Processing ${movies.length} movies from page ${page}...`);
@@ -260,7 +278,7 @@ async function seedMovies() {
     }
 
     // Fetch top-rated movies (first 2 pages = ~40 movies)
-    logger.info('Fetching top-rated movies...');
+    logger.info("Fetching top-rated movies...");
     for (let page = 1; page <= 2; page++) {
       const movies = await fetchTopRatedMovies(page);
       logger.info(`Processing ${movies.length} movies from page ${page}...`);
@@ -278,15 +296,15 @@ async function seedMovies() {
       }
     }
 
-    logger.info('='.repeat(50));
-    logger.info('Seeding completed!');
+    logger.info("=".repeat(50));
+    logger.info("Seeding completed!");
     logger.info(`✓ Successfully added: ${successCount} movies`);
     logger.info(`⊘ Skipped (duplicates): ${skippedCount} movies`);
     logger.info(`✗ Errors: ${errorCount} movies`);
 
     process.exit(0);
   } catch (error) {
-    logger.error('Seeding failed', error);
+    logger.error("Seeding failed", error);
     process.exit(1);
   }
 }
