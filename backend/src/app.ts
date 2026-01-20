@@ -16,14 +16,29 @@ const getCorsOrigins = (): string[] => {
   // If CORS_ORIGINS is set, parse it and combine with defaults
   if (env.CORS_ORIGINS) {
     const customOrigins = env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean);
-    return [...defaultOrigins, ...customOrigins];
+    const allOrigins = [...defaultOrigins, ...customOrigins];
+    console.log('CORS allowed origins:', allOrigins);
+    return allOrigins;
   }
   
+  console.log('CORS using default origins:', defaultOrigins);
   return defaultOrigins;
 };
 
+const corsOrigins = getCorsOrigins();
+
 app.use(cors({
-  origin: getCorsOrigins(),
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (corsOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}. Allowed origins:`, corsOrigins);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
